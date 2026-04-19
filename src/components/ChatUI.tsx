@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from "react";
-import { WebWorkerMLCEngine } from "@mlc-ai/web-llm";
+import { WebWorkerMLCEngine, ChatCompletionMessageParam } from "@mlc-ai/web-llm";
 import { ChatSession } from "@/hooks/useChatHistory";
 import { usePDFParser } from "@/hooks/usePDFParser";
 import styles from "./ChatUI.module.css";
@@ -103,7 +103,7 @@ export default function ChatUI({
 
     try {
       // Build context messages
-      const contextMessages: { role: string; content: string }[] = [
+      const contextMessages: ChatCompletionMessageParam[] = [
         { role: "system", content: SYSTEM_PROMPT },
       ];
 
@@ -112,15 +112,15 @@ export default function ChatUI({
         contextMessages.push({
           role: "system",
           content: `[첨부 문서 내용 - "${session.pdfFileName}"]\n\n${session.pdfContext.slice(0, 4000)}`,
-        });
+        } as ChatCompletionMessageParam);
       }
 
       // Add conversation history (last 10 messages for context window)
       const historySlice = messages.slice(-10);
       contextMessages.push(
-        ...historySlice.map((m) => ({ role: m.role, content: m.content }))
+        ...historySlice.map((m) => ({ role: m.role, content: m.content } as ChatCompletionMessageParam))
       );
-      contextMessages.push({ role: "user", content: userMsg });
+      contextMessages.push({ role: "user", content: userMsg } as ChatCompletionMessageParam);
 
       const completion = await engine.chat.completions.create({
         stream: true,

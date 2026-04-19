@@ -24,7 +24,7 @@ export function usePDFParser() {
         const page = await pdf.getPage(i);
         const textContent = await page.getTextContent();
         const pageText = textContent.items
-          .map((item: { str?: string }) => ("str" in item ? item.str : ""))
+          .map((item: any) => ("str" in item ? item.str : ""))
           .join(" ");
         fullText += pageText + "\n\n";
       }

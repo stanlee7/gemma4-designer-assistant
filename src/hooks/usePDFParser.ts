@@ -13,8 +13,11 @@ export function usePDFParser() {
       // Dynamic import to avoid SSR issues
       const pdfjsLib = await import("pdfjs-dist");
 
-      // Use the bundled worker
-      pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.mjs`;
+      // Use local worker bundled by Next.js instead of external CDN (fixes CORS/Version errors)
+      pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
+        "pdfjs-dist/build/pdf.worker.min.mjs",
+        import.meta.url
+      ).toString();
 
       const arrayBuffer = await file.arrayBuffer();
       const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;

@@ -13,6 +13,11 @@ export const metadata: Metadata = {
   formatDetection: {
     telephone: false,
   },
+  openGraph: {
+    title: "AI Designer Assistant",
+    description: "브라우저에서 직접 구동되는 AI 디자이너 어시스턴트",
+    images: [{ url: "/og-image.png", width: 1200, height: 630 }],
+  },
 };
 
 export const viewport: Viewport = {

@@ -54,6 +54,76 @@ export default function ChatUI({
     scrollToBottom();
   }, [messages, scrollToBottom]);
 
+  const triggerAIResponse = async (
+    messagesWithPlaceholder: ChatSession["messages"],
+    overridePdfContext?: string | null,
+    overridePdfFileName?: string | null
+  ) => {
+    setIsGenerating(true);
+
+    try {
+      // Build context messages
+      const contextMessages: ChatCompletionMessageParam[] = [
+        { role: "system", content: SYSTEM_PROMPT },
+      ];
+
+      const activePdfContext = overridePdfContext !== undefined ? overridePdfContext : session.pdfContext;
+      const activePdfFileName = overridePdfFileName !== undefined ? overridePdfFileName : session.pdfFileName;
+
+      // Add PDF context if available
+      if (activePdfContext && activePdfFileName) {
+        contextMessages.push({
+          role: "system",
+          content: `[첨부 문서 내용 - "${activePdfFileName}"]\n\n${activePdfContext.slice(0, 4000)}`,
+        } as ChatCompletionMessageParam);
+      }
+
+      // Filter out the last placeholder message to get actual history
+      const historyToPass = messagesWithPlaceholder.slice(0, -1);
+      
+      // Filter out the hardcoded welcome message, as LLM chat templates expect the first message to be from 'user' or 'system'
+      const validHistory = historyToPass.filter((m, i) => !(i === 0 && m.role === "assistant"));
+      const historySlice = validHistory.slice(-10);
+
+      contextMessages.push(
+        ...historySlice.map((m) => ({ role: m.role, content: m.content } as ChatCompletionMessageParam))
+      );
+
+      const completion = await engine.chat.completions.create({
+        stream: true,
+        messages: contextMessages,
+        temperature: 0.7,
+        top_p: 0.9,
+        max_tokens: 1024,
+      });
+
+      let reply = "";
+      for await (const chunk of completion) {
+        reply += chunk.choices[0]?.delta?.content || "";
+        onUpdateSession(session.id, {
+          messages: [
+            ...messagesWithPlaceholder.slice(0, -1),
+            { role: "assistant", content: reply },
+          ],
+        });
+      }
+    } catch (err) {
+      console.error(err);
+      onUpdateSession(session.id, {
+        messages: [
+          ...messagesWithPlaceholder.slice(0, -1),
+          {
+            role: "assistant",
+            content:
+              "⚠️ 응답 생성 중 오류가 발생했습니다. 브라우저 메모리가 부족하거나 모델에 문제가 생겼을 수 있습니다. 페이지를 새로고침 해주세요.",
+          },
+        ],
+      });
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file || file.type !== "application/pdf") {
@@ -63,17 +133,23 @@ export default function ChatUI({
 
     try {
       const text = await parsePDF(file);
+      
+      const autoPrompt = `방금 업로드한 "${file.name}" 문서의 내용을 바탕으로 다음 5가지 항목(가독성, 어필도, 오탈자, 구성력, 개선점)을 진단하고 각각 10점 만점으로 점수를 매겨서 요약 리포트를 작성해주세요.`;
+
+      const newMessages: ChatSession["messages"] = [
+        ...messages,
+        { role: "user", content: autoPrompt },
+        { role: "assistant", content: "" },
+      ];
+
       onUpdateSession(session.id, {
         pdfContext: text,
         pdfFileName: file.name,
-        messages: [
-          ...messages,
-          {
-            role: "assistant",
-            content: `📄 "${file.name}" 파일을 성공적으로 분석했습니다!\n이 문서의 내용을 바탕으로 질문해 주세요. 예를 들어:\n• "이 이력서에서 개선점을 찾아줘"\n• "포트폴리오 구조에 대해 피드백 부탁해"\n• "이 내용을 기반으로 면접 준비를 도와줘"`,
-          },
-        ],
+        messages: newMessages,
       });
+
+      await triggerAIResponse(newMessages, text, file.name);
+
     } catch (err) {
       alert(err instanceof Error ? err.message : "PDF 처리 실패");
     }
@@ -99,64 +175,7 @@ export default function ChatUI({
     ];
 
     onUpdateSession(session.id, { messages: newMessages });
-    setIsGenerating(true);
-
-    try {
-      // Build context messages
-      const contextMessages: ChatCompletionMessageParam[] = [
-        { role: "system", content: SYSTEM_PROMPT },
-      ];
-
-      // Add PDF context if available
-      if (session.pdfContext) {
-        contextMessages.push({
-          role: "system",
-          content: `[첨부 문서 내용 - "${session.pdfFileName}"]\n\n${session.pdfContext.slice(0, 4000)}`,
-        } as ChatCompletionMessageParam);
-      }
-
-      // Filter out the hardcoded welcome message, as LLM chat templates expect the first message to be from 'user' or 'system'
-      const validHistory = messages.filter((m, i) => !(i === 0 && m.role === "assistant"));
-      const historySlice = validHistory.slice(-10);
-
-      contextMessages.push(
-        ...historySlice.map((m) => ({ role: m.role, content: m.content } as ChatCompletionMessageParam))
-      );
-      contextMessages.push({ role: "user", content: userMsg } as ChatCompletionMessageParam);
-
-      const completion = await engine.chat.completions.create({
-        stream: true,
-        messages: contextMessages,
-        temperature: 0.7,
-        top_p: 0.9,
-        max_tokens: 1024,
-      });
-
-      let reply = "";
-      for await (const chunk of completion) {
-        reply += chunk.choices[0]?.delta?.content || "";
-        onUpdateSession(session.id, {
-          messages: [
-            ...newMessages.slice(0, -1),
-            { role: "assistant", content: reply },
-          ],
-        });
-      }
-    } catch (err) {
-      console.error(err);
-      onUpdateSession(session.id, {
-        messages: [
-          ...newMessages.slice(0, -1),
-          {
-            role: "assistant",
-            content:
-              "⚠️ 응답 생성 중 오류가 발생했습니다. 브라우저 메모리가 부족하거나 모델에 문제가 생겼을 수 있습니다. 페이지를 새로고침 해주세요.",
-          },
-        ],
-      });
-    } finally {
-      setIsGenerating(false);
-    }
+    await triggerAIResponse(newMessages);
   };
 
   return (

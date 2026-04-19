@@ -115,8 +115,10 @@ export default function ChatUI({
         } as ChatCompletionMessageParam);
       }
 
-      // Add conversation history (last 10 messages for context window)
-      const historySlice = messages.slice(-10);
+      // Filter out the hardcoded welcome message, as LLM chat templates expect the first message to be from 'user' or 'system'
+      const validHistory = messages.filter((m, i) => !(i === 0 && m.role === "assistant"));
+      const historySlice = validHistory.slice(-10);
+
       contextMessages.push(
         ...historySlice.map((m) => ({ role: m.role, content: m.content } as ChatCompletionMessageParam))
       );

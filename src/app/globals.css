@@ -1,0 +1,66 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap');
+
+:root {
+  --background: #F8F9FA;
+  --foreground: #202124;
+  --point-blue: #0061A4;
+  --surface-color: #FFFFFF;
+  --border-color: #E0E0E0;
+  --text-secondary: #5F6368;
+  --sidebar-width: 280px;
+  --danger: #D93025;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #121212;
+    --foreground: #E8EAED;
+    --point-blue: #40A0F0;
+    --surface-color: #1E1E1E;
+    --border-color: #3C4043;
+    --text-secondary: #9AA0A6;
+    --danger: #F28B82;
+  }
+}
+
+html, body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  overflow: hidden;
+}
+
+body {
+  background-color: var(--background);
+  color: var(--foreground);
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  display: flex;
+  flex-direction: column;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+a {
+  color: var(--point-blue);
+  text-decoration: none;
+}
+
+button {
+  cursor: pointer;
+  border: none;
+  background: none;
+  font-family: inherit;
+}
+
+/* Full-screen layout with sidebar */
+.app-container {
+  display: flex;
+  height: 100vh;
+  width: 100%;
+  background-color: var(--background);
+  overflow: hidden;
+}

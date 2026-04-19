@@ -1,0 +1,107 @@
+.onboardingContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+  padding: 24px;
+}
+
+.onboardingContent {
+  width: 100%;
+  max-width: 480px;
+  background: var(--surface-color);
+  padding: 40px 32px;
+  border-radius: 20px;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.04);
+  text-align: center;
+  border: 1px solid var(--border-color);
+}
+
+.title {
+  font-size: 24px;
+  font-weight: 600;
+  color: var(--point-blue);
+  margin-bottom: 8px;
+}
+
+.subtitle {
+  font-size: 15px;
+  color: var(--text-secondary);
+  margin-bottom: 32px;
+}
+
+/* Model selection UI */
+.modelSelection {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 24px;
+}
+
+.modelCard {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 20px;
+  border-radius: 12px;
+  border: 2px solid var(--border-color);
+  background: var(--background);
+  cursor: pointer;
+  transition: all 0.2s;
+  text-align: center;
+}
+
+.modelCard:hover {
+  border-color: var(--point-blue);
+  background: var(--surface-color);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 97, 164, 0.1);
+}
+
+.modelTitle {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--foreground);
+  margin-bottom: 6px;
+}
+
+.modelDesc {
+  font-size: 13px;
+  color: var(--text-secondary);
+  line-height: 1.4;
+}
+
+.recommendBadge {
+  background: var(--point-blue);
+  color: white;
+  font-size: 11px;
+  padding: 4px 8px;
+  border-radius: 12px;
+  margin-bottom: 8px;
+  font-weight: 600;
+}
+
+/* Progress UI */
+.progressWrapper {
+  width: 100%;
+  height: 6px;
+  background: var(--background);
+  border-radius: 8px;
+  overflow: hidden;
+  margin-bottom: 16px;
+  position: relative;
+}
+
+.progressBar {
+  height: 100%;
+  background: var(--point-blue);
+  border-radius: 8px;
+  transition: width 0.3s ease;
+}
+
+.progressText {
+  font-size: 13px;
+  color: var(--text-secondary);
+  word-break: break-all;
+}
